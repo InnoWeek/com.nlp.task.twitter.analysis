@@ -29,7 +29,7 @@ public final class LuceneIndexingJobLifecycle implements ServletContextListener 
     private static final Logger logger = Logger.getLogger(LuceneIndexingJobLifecycle.class.getName());
     private static final String INDEXING_THREAD_NAME_PREFIX = "background-indexer-";
     private static final int INITIAL_DELAY_SECONDS = 30;
-    private static final int PERIOD_SECONDS = 15;
+    private static final int DELAY_BETWEEN_EXECUTIONS = 15;
     private static final int COMPLETION_TIMEOUT_MILLIS = 250;
 
     private final AtomicInteger threadCounter = new AtomicInteger();
@@ -79,13 +79,13 @@ public final class LuceneIndexingJobLifecycle implements ServletContextListener 
 
     private void scheduleTheIndexingJob(EntityManagerFactory entityManagerFactory, Directory directory) {
         final BackgroundIndexingJob backgroundIndexingJob = new BackgroundIndexingJob(entityManagerFactory, directory);
-        scheduledExecutorService.scheduleAtFixedRate(() -> {
+        scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
                 backgroundIndexingJob.run();
             } catch (RuntimeException ex) {
                 logger.log(Level.SEVERE, "The background indexing job failed with an exception.", ex);
             }
-        }, INITIAL_DELAY_SECONDS, PERIOD_SECONDS, TimeUnit.SECONDS);
+        }, INITIAL_DELAY_SECONDS, DELAY_BETWEEN_EXECUTIONS, TimeUnit.SECONDS);
     }
 
     @Override
