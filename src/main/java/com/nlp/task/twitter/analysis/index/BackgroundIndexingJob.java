@@ -30,7 +30,7 @@ public final class BackgroundIndexingJob implements Runnable {
     private static final Calendar DEFAULT_REINDEX_DATE = new Calendar.Builder().setInstant(0).build();
     private static final int MAX_RESULTS = 10;
     private static final String JPQL_QUERY_TWEETS_TO_INDEX = "select T from Tweet T "
-            + "where T.sentiment != 'UNKNOWN' "
+            + "where T.sentiment != :sentiment "
             + "and (T.dateOfIndexing is null or T.dateOfIndexing < :reindexDate)";
     private static final String FIELD_TWEET_ID = "id";
     private static final String FIELD_CONTENT = "content";
@@ -46,6 +46,7 @@ public final class BackgroundIndexingJob implements Runnable {
 
     @Override
     public void run() {
+        logger.log(Level.FINEST, "Background reindexing started.");
         EntityManager entityManager = null;
         final IndexWriterConfig indexWriterConfig = new IndexWriterConfig(new StandardAnalyzer());
         try (IndexWriter indexWriter = new IndexWriter(indexDirectory, indexWriterConfig)) {
@@ -57,12 +58,14 @@ public final class BackgroundIndexingJob implements Runnable {
             if (null != entityManager) {
                 entityManager.close();
             }
+            logger.log(Level.FINEST, "Background reindexing completed.");
         }
     }
 
     private void index(IndexWriter indexWriter, EntityManager entityManager) throws IOException {
         final TypedQuery<Tweet> query = entityManager.createQuery(JPQL_QUERY_TWEETS_TO_INDEX, Tweet.class);
         query.setMaxResults(MAX_RESULTS);
+        query.setParameter("sentiment", Tweet.Sentiment.UNKNOWN);
         query.setParameter("reindexDate", DEFAULT_REINDEX_DATE, TemporalType.TIMESTAMP);
 
         for (List<Tweet> tweets = query.getResultList(); !(tweets.isEmpty() || Thread.interrupted()); tweets = query.getResultList()) {
