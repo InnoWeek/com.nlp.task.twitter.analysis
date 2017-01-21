@@ -30,7 +30,7 @@ public final class BackgroundIndexingJob implements Runnable {
     private static final Calendar DEFAULT_REINDEX_DATE = new Calendar.Builder().setInstant(0).build();
     private static final int MAX_RESULTS = 10;
     private static final String JPQL_QUERY_TWEETS_TO_INDEX = "select T from Tweet T "
-            + "where (T.dateOfIndexing is null and T.sentiment <> UNKNOWN) "
+            + "where (T.dateOfIndexing is null and T.sentiment != UNKNOWN) "
             + "or T.dateOfIndexing < :reindexDate";
     private static final String FIELD_TWEET_ID = "id";
     private static final String FIELD_CONTENT = "content";
