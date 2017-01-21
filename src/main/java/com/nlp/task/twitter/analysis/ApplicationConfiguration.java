@@ -1,15 +1,12 @@
 package com.nlp.task.twitter.analysis;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.ws.rs.core.Application;
-
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
-import com.nlp.task.twitter.analysis.resource.EventResource;
+import javax.ws.rs.core.Application;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Initialize application and it's services.
@@ -25,7 +22,7 @@ public class ApplicationConfiguration extends Application {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see javax.ws.rs.core.Application#getClasses()
 	 */
 	@Override
@@ -36,8 +33,6 @@ public class ApplicationConfiguration extends Application {
 	private Set<Class<?>> getServices() {
 		services.add(JacksonJaxbJsonProvider.class);
 		logger.debug(DEBUG_SERVICE_INITIALIZED, JacksonJaxbJsonProvider.class.getName());
-		services.add(EventResource.class);
-		logger.debug(DEBUG_SERVICE_INITIALIZED, EventResource.class.getName());
 		return services;
 	}
 }
