@@ -65,7 +65,7 @@ public final class BackgroundIndexingJob implements Runnable {
         query.setMaxResults(MAX_RESULTS);
         query.setParameter("reindexDate", DEFAULT_REINDEX_DATE, TemporalType.TIMESTAMP);
 
-        for (List<Tweet> tweets = query.getResultList(); !tweets.isEmpty(); tweets = query.getResultList()) {
+        for (List<Tweet> tweets = query.getResultList(); !(tweets.isEmpty() || Thread.interrupted()); tweets = query.getResultList()) {
             index(indexWriter, tweets);
         }
     }
