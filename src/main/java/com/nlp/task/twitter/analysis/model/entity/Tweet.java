@@ -28,6 +28,9 @@ public class Tweet {
     @Temporal(TemporalType.TIMESTAMP)
     private Calendar dateOfAnalysis;
 
+    @Temporal(TemporalType.TIMESTAMP)
+    private Calendar dateOfIndexing;
+
     @Enumerated(EnumType.STRING)
     private Tweet.Sentiment sentiment;
 
@@ -53,6 +56,14 @@ public class Tweet {
 
     public void setDateOfAnalysis(Calendar dateOfAnalysis) {
         this.dateOfAnalysis = dateOfAnalysis;
+    }
+
+    public Calendar getDateOfIndexing() {
+        return dateOfIndexing;
+    }
+
+    public void setDateOfIndexing(Calendar dateOfIndexing) {
+        this.dateOfIndexing = dateOfIndexing;
     }
 
     public Sentiment getSentiment() {
