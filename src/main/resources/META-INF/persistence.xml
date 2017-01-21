@@ -7,6 +7,7 @@
 		<provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
 		<class>com.nlp.task.twitter.analysis.model.entity.Event</class>
 		<class>com.nlp.task.twitter.analysis.model.entity.OpportunityAmt</class>
+		<class>com.nlp.task.twitter.analysis.model.entity.Tweet</class>
 		<properties>
 			<property name="eclipselink.ddl-generation" value="create-or-extend-tables" />
 			<property name="eclipselink.logging.level" value="SEVERE" />
