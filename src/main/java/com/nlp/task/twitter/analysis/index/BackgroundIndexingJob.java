@@ -66,13 +66,10 @@ public final class BackgroundIndexingJob implements Runnable {
         query.setParameter("reindexDate", DEFAULT_REINDEX_DATE, TemporalType.TIMESTAMP);
 
         for (List<Tweet> tweets = query.getResultList(); !(tweets.isEmpty() || Thread.interrupted()); tweets = query.getResultList()) {
-            index(indexWriter, tweets);
-        }
-    }
-
-    private void index(IndexWriter indexWriter, List<Tweet> tweets) throws IOException {
-        for (Tweet tweet : tweets) {
-            index(indexWriter, tweet);
+            for (Tweet tweet : tweets) {
+                index(indexWriter, tweet);
+                updateIndexingDate(entityManager, tweet);
+            }
         }
     }
 
@@ -91,6 +88,13 @@ public final class BackgroundIndexingJob implements Runnable {
 
         final Term documentId = new Term(FIELD_TWEET_ID, tweetId);
         indexWriter.updateDocument(documentId, document);
+    }
+
+    private void updateIndexingDate(EntityManager entityManager, Tweet tweet) {
+        entityManager.getTransaction().begin();
+        tweet.setDateOfIndexing(Calendar.getInstance());
+        entityManager.merge(tweet);
+        entityManager.getTransaction().commit();
     }
 
 }
