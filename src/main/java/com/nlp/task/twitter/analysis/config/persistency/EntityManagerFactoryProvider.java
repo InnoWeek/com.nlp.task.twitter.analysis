@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * This listener is responsible for teh initialization and destruction of the
+ * This listener is responsible for the initialization and destruction of the
  * entity manager factory. It must be initialized before any other listeners
  * that may try to use the entity manager factory.
  */
