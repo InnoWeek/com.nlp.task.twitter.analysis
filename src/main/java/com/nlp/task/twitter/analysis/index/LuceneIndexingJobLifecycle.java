@@ -1,10 +1,17 @@
 package com.nlp.task.twitter.analysis.index;
 
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
+
+import javax.annotation.Resource;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
@@ -27,23 +34,51 @@ public final class LuceneIndexingJobLifecycle implements ServletContextListener 
 
     private final AtomicInteger threadCounter = new AtomicInteger();
     private ScheduledExecutorService scheduledExecutorService;
+    private FSDirectory indexDirectory;
+
+    @Resource(name = "lucene-index-directory")
+    String indexDirectoryPath;
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
+        try {
+            final EntityManagerFactory entityManagerFactory = acquireEntityManagerFactory(sce);
+            final Directory directory = openTheIndexDirectory(sce);
+            initializeTheScheduledExecutorService();
+            scheduleTheIndexingJob(entityManagerFactory, directory);
+        } catch (IOException ex) {
+            throw new IllegalStateException("Some components failed to initialize properly.", ex);
+        }
+    }
+
+    private EntityManagerFactory acquireEntityManagerFactory(ServletContextEvent sce) {
         final ServletContext servletContext = sce.getServletContext();
         final EntityManagerFactory entityManagerFactory = (EntityManagerFactory) servletContext.getAttribute(EntityManagerFactory.class.getName());
         if (null == entityManagerFactory) {
             throw new IllegalStateException("The entity manager factory has not been initialized.");
         }
+        return entityManagerFactory;
+    }
 
+    private Directory openTheIndexDirectory(ServletContextEvent sce) throws IOException {
+        final ServletContext servletContext = sce.getServletContext();
+        final Path pathToIndexDirectory = Paths.get(indexDirectoryPath);
+        indexDirectory = FSDirectory.open(pathToIndexDirectory);
+        servletContext.setAttribute(Directory.class.getName(), indexDirectory);
+        return indexDirectory;
+    }
+
+    private void initializeTheScheduledExecutorService() {
         final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(r -> {
             final Thread thread = defaultThreadFactory.newThread(r);
             thread.setName(INDEXING_THREAD_NAME_PREFIX + threadCounter.getAndIncrement());
             return thread;
         });
+    }
 
-        final BackgroundIndexingJob backgroundIndexingJob = new BackgroundIndexingJob(entityManagerFactory);
+    private void scheduleTheIndexingJob(EntityManagerFactory entityManagerFactory, Directory directory) {
+        final BackgroundIndexingJob backgroundIndexingJob = new BackgroundIndexingJob(entityManagerFactory, directory);
         scheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
                 backgroundIndexingJob.run();
@@ -61,6 +96,12 @@ public final class LuceneIndexingJobLifecycle implements ServletContextListener 
                 scheduledExecutorService.awaitTermination(COMPLETION_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
             } catch (InterruptedException ex) {
                 logger.log(Level.SEVERE, "The background indexing job failed to shut down on time.", ex);
+            }
+
+            try {
+                indexDirectory.close();
+            } catch (IOException ex) {
+                logger.log(Level.SEVERE, "Failed to close the index directory.", ex);
             }
         }
     }
