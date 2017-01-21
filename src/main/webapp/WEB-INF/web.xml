@@ -6,6 +6,12 @@
 	<welcome-file-list>
 		<welcome-file>index.html</welcome-file>
 	</welcome-file-list>
+
+	<!-- This must be the first executed listener -->
+	<listener>
+		<listener-class>com.nlp.task.twitter.analysis.config.persistency.EntityManagerProvider</listener-class>
+	</listener>
+
 	<servlet>
 		<servlet-name>CXFServlet</servlet-name>
 		<servlet-class>org.apache.cxf.jaxrs.servlet.CXFNonSpringJaxrsServlet</servlet-class>

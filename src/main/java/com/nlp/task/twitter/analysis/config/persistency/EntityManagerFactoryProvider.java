@@ -1,63 +1,55 @@
 package com.nlp.task.twitter.analysis.config.persistency;
 
+import org.eclipse.persistence.config.PersistenceUnitProperties;
+
+import javax.annotation.Resource;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import javax.sql.DataSource;
-
-import org.eclipse.persistence.config.PersistenceUnitProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
- * Entity Manager Factory Provider.
+ * This listener is responsible for teh initialization and destruction of the
+ * entity manager factory. It must be initialized before any other listeners
+ * that may try to use the entity manager factory.
  */
-public class EntityManagerFactoryProvider {
+public final class EntityManagerFactoryProvider implements ServletContextListener {
+    private static final String PERSISTENCE_UNIT_NAME = "com.nlp.task.twitter.analysis";
+    private static EntityManagerFactory entityManagerFactory;
 
-	private static final String DEBUG_CLOSING_ENTITY_MANAGER_FACTORY = "Closing Entity Manager Factory ...";
-	private static final String DEBUG_ENTITY_MANAGER_FACTORY_CLOSED = "Entity Manager Factory closed.";
-	private static final String DEBUG_ENTITY_MANAGER_FACTORY_INITIALIZED = "Entity Manager Factory initialized.";
-	private static final String DEBUG_INITIALIZING_ENTITY_MANAGER_FACTORY = "Initializing Entity Manager Factory ...";
+    @Resource
+    DataSource dataSource;
 
-	public static final String PERSISTENCE_UNIT_NAME = "com.nlp.task.twitter.analysis";
+    @Override
+    public void contextInitialized(ServletContextEvent sce) {
+        final Map<Object, Object> properties = new HashMap<>();
+        properties.put(PersistenceUnitProperties.NON_JTA_DATASOURCE, dataSource);
+        entityManagerFactory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, properties);
 
-	private final static Logger logger = LoggerFactory.getLogger(EntityManagerFactoryProvider.class);
+        final ServletContext servletContext = sce.getServletContext();
+        servletContext.setAttribute(EntityManagerFactory.class.getName(), entityManagerFactory);
+    }
 
-	private static EntityManagerFactory entityManagerFactory = null;
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) {
+        if (null != entityManagerFactory) {
+            entityManagerFactory.close();
+        }
+    }
 
-	/**
-	 * Returns the entity manager factory.
-	 *
-	 * @return the entity manager factory
-	 */
-	public synchronized static EntityManagerFactory getEntityManagerFactory() {
-		if (EntityManagerFactoryProvider.entityManagerFactory == null
-				|| !EntityManagerFactoryProvider.entityManagerFactory.isOpen()) {
-			initEntityManagerFactory(DataSourceProvider.getInstance().getDataSource());
-		}
-		return EntityManagerFactoryProvider.entityManagerFactory;
-	}
+    public static EntityManagerFactory getEntityManagerFactory() {
+        if (null == entityManagerFactory) {
+            throw new IllegalStateException("The entity manager factory has not been initialized.");
+        }
 
-	private static void initEntityManagerFactory(DataSource dataSource) {
-		logger.debug(DEBUG_INITIALIZING_ENTITY_MANAGER_FACTORY);
-		Map<Object, Object> properties = new HashMap<>();
-		properties.put(PersistenceUnitProperties.NON_JTA_DATASOURCE, dataSource);
-		EntityManagerFactoryProvider.entityManagerFactory = Persistence
-				.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, properties);
-		logger.debug(DEBUG_ENTITY_MANAGER_FACTORY_INITIALIZED);
-	}
+        if (!entityManagerFactory.isOpen()) {
+            throw new IllegalStateException("The entity manager factory has already been closed.");
+        }
 
-	/**
-	 * Closes the entity manager factory.
-	 */
-	public synchronized void close() {
-		logger.debug(DEBUG_CLOSING_ENTITY_MANAGER_FACTORY);
-		if (EntityManagerFactoryProvider.entityManagerFactory != null) {
-			EntityManagerFactoryProvider.entityManagerFactory.close();
-			EntityManagerFactoryProvider.entityManagerFactory = null;
-		}
-		logger.debug(DEBUG_ENTITY_MANAGER_FACTORY_CLOSED);
-	}
+        return entityManagerFactory;
+    }
 }

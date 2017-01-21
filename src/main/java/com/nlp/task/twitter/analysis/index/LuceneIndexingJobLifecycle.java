@@ -1,8 +1,7 @@
 package com.nlp.task.twitter.analysis.index;
 
-import com.nlp.task.twitter.analysis.config.persistency.EntityManagerFactoryProvider;
-
 import javax.persistence.EntityManagerFactory;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
@@ -31,6 +30,12 @@ public final class LuceneIndexingJobLifecycle implements ServletContextListener 
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
+        final ServletContext servletContext = sce.getServletContext();
+        final EntityManagerFactory entityManagerFactory = (EntityManagerFactory) servletContext.getAttribute(EntityManagerFactory.class.getName());
+        if (null == entityManagerFactory) {
+            throw new IllegalStateException("The entity manager factory has not been initialized.");
+        }
+
         final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(r -> {
             final Thread thread = defaultThreadFactory.newThread(r);
@@ -38,9 +43,7 @@ public final class LuceneIndexingJobLifecycle implements ServletContextListener 
             return thread;
         });
 
-        final EntityManagerFactory entityManagerFactory = EntityManagerFactoryProvider.getEntityManagerFactory();
         final BackgroundIndexingJob backgroundIndexingJob = new BackgroundIndexingJob(entityManagerFactory);
-
         scheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
                 backgroundIndexingJob.run();
