@@ -19,6 +19,7 @@
 		<com.fasterxml.jackson.version>2.6.1</com.fasterxml.jackson.version>
 		<model.mapper.version>0.7.4</model.mapper.version>
 		<lucene.version>6.3.0</lucene.version>
+        <dl4j.version>0.7.0</dl4j.version>
 	</properties>
 	<dependencies>
 
@@ -33,19 +34,24 @@
         <dependency>
             <groupId>org.nd4j</groupId>
             <artifactId>nd4j-native</artifactId>
-            <version>0.7.0</version>
+            <version>${dl4j.version}</version>
         </dependency>
 		<!-- Core DL4J functionality -->
 		<dependency>
 			<groupId>org.deeplearning4j</groupId>
 			<artifactId>deeplearning4j-core</artifactId>
-			<version>0.7.0</version>
+			<version>${dl4j.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.datavec</groupId>
+					<artifactId>datavec-data-image</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
-
 		<dependency>
 			<groupId>org.deeplearning4j</groupId>
 			<artifactId>deeplearning4j-nlp</artifactId>
-			<version>0.7.0</version>
+			<version>${dl4j.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
