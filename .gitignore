@@ -1,0 +1,9 @@
+### Exclude from git:
+/idea/
+/bin/
+/target/
+.*
+*.iml
+
+### Exceptions
+!.gitignore
