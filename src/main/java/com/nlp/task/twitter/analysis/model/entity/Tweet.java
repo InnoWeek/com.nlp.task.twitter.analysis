@@ -10,7 +10,12 @@ import java.util.Calendar;
 public class Tweet {
     public enum Sentiment {
         POSITIVE,
-        NEGATIVE
+        NEGATIVE,
+        UNKNOWN
+    }
+
+    public Tweet() {
+        sentiment = Sentiment.UNKNOWN;
     }
 
     @Id
@@ -23,7 +28,7 @@ public class Tweet {
     @Temporal(TemporalType.TIMESTAMP)
     private Calendar dateOfAnalysis;
 
-    @Enumerated
+    @Enumerated(EnumType.STRING)
     private Tweet.Sentiment sentiment;
 
     public long getId() {
