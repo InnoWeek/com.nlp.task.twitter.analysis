@@ -14,23 +14,19 @@ public class Tweet {
         UNKNOWN
     }
 
+
     public Tweet() {
         sentiment = Sentiment.UNKNOWN;
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+    private String id;
 
     @Basic
     private String content;
 
     @Basic
     private String topic;
-
-    @Basic
-    @Column(unique = true)
-    private String tweetId;
 
     @Temporal(TemporalType.TIMESTAMP)
     private Calendar dateOfAnalysis;
@@ -41,11 +37,19 @@ public class Tweet {
     @Enumerated(EnumType.STRING)
     private Tweet.Sentiment sentiment;
 
-    public long getId() {
+    @PreUpdate
+    @PrePersist
+    void prePersist() {
+        if (null == sentiment) {
+            sentiment = Sentiment.UNKNOWN;
+        }
+    }
+
+    public String getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -59,14 +63,6 @@ public class Tweet {
 
     public String getTopic() {
         return topic;
-    }
-
-    public String getTweetId() {
-        return tweetId;
-    }
-
-    public void setTweetId(String tweetId) {
-        this.tweetId = tweetId;
     }
 
     public void setTopic(String topic) {

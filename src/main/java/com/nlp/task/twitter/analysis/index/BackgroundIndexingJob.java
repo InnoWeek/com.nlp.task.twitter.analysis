@@ -81,8 +81,7 @@ public final class BackgroundIndexingJob implements Runnable {
     private void index(IndexWriter indexWriter, Tweet tweet) throws IOException {
         final Document document = new Document();
 
-        final String tweetId = Long.toString(tweet.getId());
-        final Field tweetIdField = new StringField(FIELD_TWEET_ID, tweetId, Field.Store.NO);
+        final Field tweetIdField = new StringField(FIELD_TWEET_ID, tweet.getId(), Field.Store.NO);
         document.add(tweetIdField);
 
         final Field contentField = new TextField(FIELD_CONTENT, tweet.getContent(), Field.Store.NO);
@@ -97,7 +96,7 @@ public final class BackgroundIndexingJob implements Runnable {
         final Field sentimentField = new StringField(FIELD_SENTIMENT, tweet.getSentiment().name(), Field.Store.NO);
         document.add(sentimentField);
 
-        final Term documentId = new Term(FIELD_TWEET_ID, tweetId);
+        final Term documentId = new Term(FIELD_TWEET_ID, tweet.getId());
         indexWriter.updateDocument(documentId, document);
     }
 
