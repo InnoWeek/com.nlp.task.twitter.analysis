@@ -1,5 +1,8 @@
 package com.nlp.task.twitter.analysis.index;
 
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.StandardDirectoryReader;
+import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
@@ -25,12 +28,13 @@ import java.util.logging.Logger;
  * on application start/stop
  */
 @WebListener
-public final class LuceneIndexingJobLifecycle implements ServletContextListener {
+public final class LuceneIndexingJobLifecycle implements ServletContextListener, IndexSearcherFactory {
     private static final Logger logger = Logger.getLogger(LuceneIndexingJobLifecycle.class.getName());
     private static final String INDEXING_THREAD_NAME_PREFIX = "background-indexer-";
     private static final int INITIAL_DELAY_SECONDS = 30;
     private static final int DELAY_BETWEEN_EXECUTIONS = 15;
     private static final int COMPLETION_TIMEOUT_MILLIS = 250;
+    private static final int INDEX_READER_MAX_AGE = 90 * 1000;
 
     private final AtomicInteger threadCounter = new AtomicInteger();
     private ScheduledExecutorService scheduledExecutorService;
@@ -38,6 +42,7 @@ public final class LuceneIndexingJobLifecycle implements ServletContextListener 
 
     @Resource(name = "lucene-index-directory")
     String indexDirectoryPath;
+    private ShareableIndexSearcher indexSearcher;
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
@@ -46,6 +51,7 @@ public final class LuceneIndexingJobLifecycle implements ServletContextListener 
             final Directory directory = openTheIndexDirectory(sce);
             initializeTheScheduledExecutorService();
             scheduleTheIndexingJob(entityManagerFactory, directory);
+            registerTheIndesSearcherFactory(sce);
         } catch (IOException ex) {
             throw new IllegalStateException("Some components failed to initialize properly.", ex);
         }
@@ -99,10 +105,34 @@ public final class LuceneIndexingJobLifecycle implements ServletContextListener 
             }
 
             try {
+                indexSearcher.close();
+            } catch (Exception ex) {
+                logger.log(Level.SEVERE, "Failed to close the index searcher.", ex);
+            }
+
+            try {
                 indexDirectory.close();
             } catch (IOException ex) {
                 logger.log(Level.SEVERE, "Failed to close the index directory.", ex);
             }
         }
+    }
+
+    private void registerTheIndesSearcherFactory(ServletContextEvent sce) {
+        final ServletContext servletContext = sce.getServletContext();
+        servletContext.setAttribute(IndexSearcherFactory.class.getName(), this);
+    }
+
+    @Override
+    public synchronized ShareableIndexSearcher getIndexSearcher() throws IOException {
+        if (null == indexSearcher || indexSearcher.isOutdated()) {
+            if (null != indexSearcher) {
+                indexSearcher.close();
+            }
+            final IndexReader indexReader = StandardDirectoryReader.open(indexDirectory);
+            indexSearcher = new ShareableIndexSearcher(indexReader, INDEX_READER_MAX_AGE);
+        }
+
+        return indexSearcher.share();
     }
 }
