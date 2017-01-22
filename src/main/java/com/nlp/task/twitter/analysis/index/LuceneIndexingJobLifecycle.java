@@ -50,7 +50,7 @@ public final class LuceneIndexingJobLifecycle implements ServletContextListener,
             final Directory directory = openTheIndexDirectory(sce);
             initializeTheScheduledExecutorService();
             scheduleTheIndexingJob(entityManagerFactory, directory);
-            registerTheIndesSearcherFactory(sce);
+            registerTheIndexSearcherFactory(sce);
         } catch (IOException ex) {
             throw new IllegalStateException("Some components failed to initialize properly.", ex);
         }
@@ -119,7 +119,7 @@ public final class LuceneIndexingJobLifecycle implements ServletContextListener,
         }
     }
 
-    private void registerTheIndesSearcherFactory(ServletContextEvent sce) {
+    private void registerTheIndexSearcherFactory(ServletContextEvent sce) {
         final ServletContext servletContext = sce.getServletContext();
         servletContext.setAttribute(IndexSearcherFactory.class.getName(), this);
     }
