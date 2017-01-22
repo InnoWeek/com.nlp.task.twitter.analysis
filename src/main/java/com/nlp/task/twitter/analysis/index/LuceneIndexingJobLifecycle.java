@@ -2,7 +2,6 @@ package com.nlp.task.twitter.analysis.index;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.StandardDirectoryReader;
-import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
@@ -105,7 +104,9 @@ public final class LuceneIndexingJobLifecycle implements ServletContextListener,
             }
 
             try {
-                indexSearcher.close();
+                if (null != indexSearcher) {
+                    indexSearcher.close();
+                }
             } catch (Exception ex) {
                 logger.log(Level.SEVERE, "Failed to close the index searcher.", ex);
             }
