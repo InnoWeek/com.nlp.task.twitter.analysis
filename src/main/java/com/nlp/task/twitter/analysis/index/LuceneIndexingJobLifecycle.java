@@ -1,7 +1,6 @@
 package com.nlp.task.twitter.analysis.index;
 
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.StandardDirectoryReader;
+import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
@@ -27,21 +26,22 @@ import java.util.logging.Logger;
  * on application start/stop
  */
 @WebListener
-public final class LuceneIndexingJobLifecycle implements ServletContextListener, IndexSearcherFactory {
+public final class LuceneIndexingJobLifecycle implements ServletContextListener {
     private static final Logger logger = Logger.getLogger(LuceneIndexingJobLifecycle.class.getName());
     private static final String INDEXING_THREAD_NAME_PREFIX = "background-indexer-";
+    private static final int SCHEDULER_POOL_SIZE = 2;
     private static final int INITIAL_DELAY_SECONDS = 30;
     private static final int DELAY_BETWEEN_EXECUTIONS = 15;
+    private static final int INDEX_READER_REFRESH_RATE_SECONDS = 60;
     private static final int COMPLETION_TIMEOUT_MILLIS = 250;
-    private static final int INDEX_READER_MAX_AGE = 90 * 1000;
 
     private final AtomicInteger threadCounter = new AtomicInteger();
     private ScheduledExecutorService scheduledExecutorService;
     private FSDirectory indexDirectory;
+    private SearcherManager searcherManager;
 
     @Resource(name = "lucene-index-directory")
     String indexDirectoryPath;
-    private ShareableIndexSearcher indexSearcher;
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
@@ -50,7 +50,7 @@ public final class LuceneIndexingJobLifecycle implements ServletContextListener,
             final Directory directory = openTheIndexDirectory(sce);
             initializeTheScheduledExecutorService();
             scheduleTheIndexingJob(entityManagerFactory, directory);
-            registerTheIndexSearcherFactory(sce);
+            initializeTheSearchManager(sce);
         } catch (IOException ex) {
             throw new IllegalStateException("Some components failed to initialize properly.", ex);
         }
@@ -75,7 +75,7 @@ public final class LuceneIndexingJobLifecycle implements ServletContextListener,
 
     private void initializeTheScheduledExecutorService() {
         final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
-        scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(r -> {
+        scheduledExecutorService = Executors.newScheduledThreadPool(SCHEDULER_POOL_SIZE, r -> {
             final Thread thread = defaultThreadFactory.newThread(r);
             thread.setName(INDEXING_THREAD_NAME_PREFIX + threadCounter.getAndIncrement());
             return thread;
@@ -104,14 +104,6 @@ public final class LuceneIndexingJobLifecycle implements ServletContextListener,
             }
 
             try {
-                if (null != indexSearcher) {
-                    indexSearcher.close();
-                }
-            } catch (Exception ex) {
-                logger.log(Level.SEVERE, "Failed to close the index searcher.", ex);
-            }
-
-            try {
                 indexDirectory.close();
             } catch (IOException ex) {
                 logger.log(Level.SEVERE, "Failed to close the index directory.", ex);
@@ -119,21 +111,17 @@ public final class LuceneIndexingJobLifecycle implements ServletContextListener,
         }
     }
 
-    private void registerTheIndexSearcherFactory(ServletContextEvent sce) {
+    private void initializeTheSearchManager(ServletContextEvent sce) throws IOException {
+        searcherManager = new SearcherManager(indexDirectory, null);
         final ServletContext servletContext = sce.getServletContext();
-        servletContext.setAttribute(IndexSearcherFactory.class.getName(), this);
-    }
+        servletContext.setAttribute(SearcherManager.class.getName(), searcherManager);
 
-    @Override
-    public synchronized ShareableIndexSearcher getIndexSearcher() throws IOException {
-        if (null == indexSearcher || indexSearcher.isOutdated()) {
-            if (null != indexSearcher) {
-                indexSearcher.close();
+        scheduledExecutorService.scheduleWithFixedDelay(() -> {
+            try {
+                searcherManager.maybeRefresh();
+            } catch (IOException ex) {
+                logger.log(Level.SEVERE, "Failed to refresh the index searcher.", ex);
             }
-            final IndexReader indexReader = StandardDirectoryReader.open(indexDirectory);
-            indexSearcher = new ShareableIndexSearcher(indexReader, INDEX_READER_MAX_AGE);
-        }
-
-        return indexSearcher.share();
+        }, INITIAL_DELAY_SECONDS, INDEX_READER_REFRESH_RATE_SECONDS, TimeUnit.SECONDS);
     }
 }

@@ -1,12 +1,12 @@
 package com.nlp.task.twitter.analysis.rest;
 
-import com.nlp.task.twitter.analysis.index.IndexSearcherFactory;
-import com.nlp.task.twitter.analysis.index.ShareableIndexSearcher;
 import com.nlp.task.twitter.analysis.model.entity.Tweet;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.TermsQuery;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.SearcherManager;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
@@ -36,9 +36,9 @@ public final class LuceneIndexEndpoint {
     @Path("byTopic")
     @Produces(MediaType.APPLICATION_JSON)
     public Response findByKeyWord(@QueryParam("topic") String topic) throws IOException {
-        final IndexSearcherFactory indexSearcherFactory = (IndexSearcherFactory) servletContext.getAttribute(IndexSearcherFactory.class.getName());
-        try (ShareableIndexSearcher indexSearcher = indexSearcherFactory.getIndexSearcher()) {
-
+        final SearcherManager searchManager = (SearcherManager) servletContext.getAttribute(SearcherManager.class.getName());
+        final IndexSearcher indexSearcher = searchManager.acquire();
+        try {
             final Term topicTerm = new Term("topic", topic.toLowerCase());
 
             final BooleanQuery queryPositive = new BooleanQuery.Builder()
@@ -58,6 +58,8 @@ public final class LuceneIndexEndpoint {
             result.put("negative", numberOfNegativeTweets);
             result.put("topic", topic);
             return Response.ok(result).build();
+        } finally {
+            searchManager.release(indexSearcher);
         }
     }
 }
