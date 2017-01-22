@@ -53,9 +53,10 @@ public final class LuceneIndexEndpoint {
                     .build();
             final int numberOfNegativeTweets = indexSearcher.count(queryNegative);
 
-            final Map<String, Integer> result = new HashMap<>();
+            final Map<String, ? super Object> result = new HashMap<>();
             result.put("positive", numberOfPositiveTweets);
             result.put("negative", numberOfNegativeTweets);
+            result.put("topic", topic);
             return Response.ok(result).build();
         }
     }
