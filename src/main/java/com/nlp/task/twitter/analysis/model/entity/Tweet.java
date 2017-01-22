@@ -25,6 +25,9 @@ public class Tweet {
     @Basic
     private String content;
 
+    @Basic
+    private String topic;
+
     @Temporal(TemporalType.TIMESTAMP)
     private Calendar dateOfAnalysis;
 
@@ -48,6 +51,14 @@ public class Tweet {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getTopic() {
+        return topic;
+    }
+
+    public void setTopic(String topic) {
+        this.topic = topic;
     }
 
     public Calendar getDateOfAnalysis() {

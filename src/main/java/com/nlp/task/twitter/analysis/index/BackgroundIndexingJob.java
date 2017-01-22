@@ -18,6 +18,7 @@ import javax.persistence.TypedQuery;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,6 +36,7 @@ public final class BackgroundIndexingJob implements Runnable {
     private static final String FIELD_TWEET_ID = "id";
     private static final String FIELD_CONTENT = "content";
     private static final String FIELD_SENTIMENT = "sentiment";
+    private static final String FIELD_TOPIC = "topic";
 
     private final EntityManagerFactory emf;
     private final Directory indexDirectory;
@@ -85,6 +87,12 @@ public final class BackgroundIndexingJob implements Runnable {
 
         final Field contentField = new TextField(FIELD_CONTENT, tweet.getContent(), Field.Store.NO);
         document.add(contentField);
+
+        if (tweet.getTopic() != null) {
+            final String topic = tweet.getTopic().toLowerCase(Locale.ENGLISH);
+            final Field topicField = new StringField(FIELD_TOPIC, topic, Field.Store.NO);
+            document.add(topicField);
+        }
 
         final Field sentimentField = new StringField(FIELD_SENTIMENT, tweet.getSentiment().name(), Field.Store.NO);
         document.add(sentimentField);
