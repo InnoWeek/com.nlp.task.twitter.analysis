@@ -28,6 +28,10 @@ public class Tweet {
     @Basic
     private String topic;
 
+    @Basic
+    @Column(unique = true)
+    private String tweetId;
+
     @Temporal(TemporalType.TIMESTAMP)
     private Calendar dateOfAnalysis;
 
@@ -55,6 +59,14 @@ public class Tweet {
 
     public String getTopic() {
         return topic;
+    }
+
+    public String getTweetId() {
+        return tweetId;
+    }
+
+    public void setTweetId(String tweetId) {
+        this.tweetId = tweetId;
     }
 
     public void setTopic(String topic) {
