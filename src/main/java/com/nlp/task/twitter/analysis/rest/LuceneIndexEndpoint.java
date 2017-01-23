@@ -23,9 +23,11 @@ import java.util.Map;
 @Path("statistics")
 public final class LuceneIndexEndpoint {
     private static final String TOPIC = "topic";
+    private static final String PHRASE = "phrase";
     private static final String POSITIVE = "positive";
     private static final String NEGATIVE = "negative";
     private static final String SENTIMENT = "sentiment";
+    private static final String CONTENT = "content";
     private static final Term TERM_SENTIMENT_POSITIVE = new Term(SENTIMENT, Tweet.Sentiment.POSITIVE.name());
     private static final Term TERM_SENTIMENT_NEGATIVE = new Term(SENTIMENT, Tweet.Sentiment.NEGATIVE.name());
     private static final TermsQuery QUERY_SENTIMENT_NEGATIVE = new TermsQuery(TERM_SENTIMENT_NEGATIVE);
@@ -37,7 +39,7 @@ public final class LuceneIndexEndpoint {
     @GET
     @Path("byTopic")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response findByKeyWord(@QueryParam(TOPIC) String topic) throws IOException {
+    public Response findByTopic(@QueryParam(TOPIC) String topic) throws IOException {
         final SearcherManager searchManager = (SearcherManager) servletContext.getAttribute(SearcherManager.class.getName());
         final IndexSearcher indexSearcher = searchManager.acquire();
         try {
@@ -68,11 +70,11 @@ public final class LuceneIndexEndpoint {
     @GET
     @Path("byPhrase")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response findByPhrase(@QueryParam("phrase") String phrase) throws IOException {
+    public Response findByPhrase(@QueryParam(PHRASE) String phrase) throws IOException {
         final SearcherManager searchManager = (SearcherManager) servletContext.getAttribute(SearcherManager.class.getName());
         final IndexSearcher indexSearcher = searchManager.acquire();
         try {
-            final PhraseQuery phraseQuery = new PhraseQuery("content", phrase.toLowerCase().trim().split(REGEX_WHITESPACE));
+            final PhraseQuery phraseQuery = new PhraseQuery(CONTENT, phrase.toLowerCase().trim().split(REGEX_WHITESPACE));
             final BooleanQuery queryPositive = new BooleanQuery.Builder()
                     .add(QUERY_SENTIMENT_POSITIVE, BooleanClause.Occur.MUST)
                     .add(phraseQuery, BooleanClause.Occur.MUST)
@@ -86,9 +88,9 @@ public final class LuceneIndexEndpoint {
             final int numberOfNegativeTweets = indexSearcher.count(queryNegative);
 
             final Map<String, ? super Object> result = new HashMap<>();
-            result.put("positive", numberOfPositiveTweets);
-            result.put("negative", numberOfNegativeTweets);
-            result.put("phrase", phrase);
+            result.put(POSITIVE, numberOfPositiveTweets);
+            result.put(NEGATIVE, numberOfNegativeTweets);
+            result.put(PHRASE, phrase);
             return Response.ok(result).build();
         } finally {
             searchManager.release(indexSearcher);
