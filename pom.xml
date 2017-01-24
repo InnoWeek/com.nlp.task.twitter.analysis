@@ -109,6 +109,11 @@
 			<artifactId>lucene-queryparser</artifactId>
 			<version>${lucene.version}</version>
 		</dependency>
+		<dependency>
+		    <groupId>org.twitter4j</groupId>
+		    <artifactId>twitter4j-stream</artifactId>
+		    <version>4.0.6</version>
+		</dependency>
 	</dependencies>
 
 	<build>
