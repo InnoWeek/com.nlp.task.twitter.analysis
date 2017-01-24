@@ -120,7 +120,9 @@ public final class LuceneIndexingJobLifecycle implements ServletContextListener 
     }
 
     private void preCreateIndex() throws IOException {
-        try(IndexWriter indexWriter = new IndexWriter(indexDirectory, new IndexWriterConfig())){
+        final IndexWriterConfig indexWriterConfig = new IndexWriterConfig();
+        indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+        try(IndexWriter indexWriter = new IndexWriter(indexDirectory, indexWriterConfig)){
             indexWriter.flush();
         }
     }
