@@ -21,7 +21,7 @@ import java.util.Map;
  *
  */
 @Path("statistics")
-public final class LuceneIndexEndpoint {
+public final class SentimentStatisticsEndpoint {
     private static final String TOPIC = "topic";
     private static final String PHRASE = "phrase";
     private static final String POSITIVE = "positive";
