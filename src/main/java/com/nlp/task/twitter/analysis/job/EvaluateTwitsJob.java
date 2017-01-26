@@ -42,7 +42,7 @@ public class EvaluateTwitsJob implements Job {
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 
 		try {
-			//processTwits();
+			processTwits();
 		} catch (Exception e) {
 			logger.error("Error while fetching twits: ", e);
 		}

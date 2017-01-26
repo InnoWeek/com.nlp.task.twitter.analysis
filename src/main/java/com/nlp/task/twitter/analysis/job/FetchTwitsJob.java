@@ -36,7 +36,7 @@ public class FetchTwitsJob implements Job {
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 
 		try {
-			//processTwits();
+			processTwits();
 		} catch (Exception e) {
 			logger.error("Error while fetching twits: ", e);
 		}
@@ -46,10 +46,10 @@ public class FetchTwitsJob implements Job {
 	private void processTwits() throws TwitterException, IOException {
 
 		ConfigurationBuilder cb = new ConfigurationBuilder();
-		cb.setDebugEnabled(true).setOAuthConsumerKey("<key>")
-				.setOAuthConsumerSecret("<secret>")
-				.setOAuthAccessToken("<token>")
-				.setOAuthAccessTokenSecret("<tokens>");
+		cb.setDebugEnabled(true).setOAuthConsumerKey("<>")
+		.setOAuthConsumerSecret("<>")
+		.setOAuthAccessToken("<>")
+		.setOAuthAccessTokenSecret("<>");
 		TwitterFactory tf = new TwitterFactory(cb.build());
 		Twitter twitter = tf.getInstance();
 
@@ -64,6 +64,7 @@ public class FetchTwitsJob implements Job {
 					tweet.setId(tweetId);
 					tweet.setTopic(topic);
 
+					logger.debug(st.getText());
 					tweetDao.create(tweet);
 				}
 			}
