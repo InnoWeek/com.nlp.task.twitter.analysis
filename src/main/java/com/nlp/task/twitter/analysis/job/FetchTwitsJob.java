@@ -26,7 +26,7 @@ import twitter4j.conf.ConfigurationBuilder;
  */
 public class FetchTwitsJob implements Job {
 
-	private static List<String> topics = Arrays.asList("ronaldo", "kawasaki");
+	private static List<String> topics = Arrays.asList("ronaldo", "trump");
 
 	private static final Logger logger = LoggerFactory.getLogger(FetchTwitsJob.class);
 
@@ -45,12 +45,8 @@ public class FetchTwitsJob implements Job {
 
 	private void processTwits() throws TwitterException, IOException {
 
-		ConfigurationBuilder cb = new ConfigurationBuilder();
-		cb.setDebugEnabled(true).setOAuthConsumerKey("<>")
-		.setOAuthConsumerSecret("<>")
-		.setOAuthAccessToken("<>")
-		.setOAuthAccessTokenSecret("<>");
-		TwitterFactory tf = new TwitterFactory(cb.build());
+		
+		TwitterFactory tf = new TwitterFactory();
 		Twitter twitter = tf.getInstance();
 
 		for (String topic : topics) {

@@ -97,8 +97,8 @@ public class EvaluateTwitsJob implements Job {
 			}
 
 			tweetDao.update(tweet);
-		} catch (IOException e) {
-			logger.error("Error while evaluating tweet: ", e);
+		} catch (Exception e) {
+			logger.warn("Error while evaluating tweet: ", e.getMessage());
 		}
 
 	}
