@@ -92,13 +92,16 @@ public final class SentimentStatisticsEndpoint {
                 positiveQueryBuilder.add(new TermsQuery(contentTerm), BooleanClause.Occur.SHOULD);
             }
             final BooleanQuery queryPositive = positiveQueryBuilder.build();
-
             final int numberOfPositiveTweets = indexSearcher.count(queryPositive);
 
-            final BooleanQuery queryNegative = new BooleanQuery.Builder()
-                    .add(QUERY_SENTIMENT_NEGATIVE, BooleanClause.Occur.MUST)
-                    .add(queryPositive, BooleanClause.Occur.MUST)
-                    .build();
+
+            final BooleanQuery.Builder negativeQueryBuilder = new BooleanQuery.Builder()
+                    .add(QUERY_SENTIMENT_NEGATIVE, BooleanClause.Occur.MUST);
+            for (String word : words) {
+                final Term contentTerm = new Term(CONTENT, word);
+                negativeQueryBuilder.add(new TermsQuery(contentTerm), BooleanClause.Occur.SHOULD);
+            }
+            final BooleanQuery queryNegative = negativeQueryBuilder.build();
             final int numberOfNegativeTweets = indexSearcher.count(queryNegative);
 
             final Map<String, ? super Object> result = new HashMap<>();
