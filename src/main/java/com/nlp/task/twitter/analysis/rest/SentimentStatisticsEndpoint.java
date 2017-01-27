@@ -143,15 +143,17 @@ public final class SentimentStatisticsEndpoint {
                     for (int i = bitSet.nextSetBit(0); i >= 0; i = bitSet.nextSetBit(i + 1)) {
                         final Document doc = indexSearcher.doc(i);
                         final IndexableField idField = doc.getField("id");
-                        final String tweetId = idField.stringValue();
-                        if (null != tweetId) {
-                            final Tweet tweet = em.find(Tweet.class, tweetId);
-                            if (null != tweet) {
-                                writer.println("{");
-                                writer.println(String.format(FORMAT_KEY_VALUE, "id", tweet.getId()));
-                                writer.println(String.format(FORMAT_KEY_VALUE, "content", tweet.getContent()));
-                                writer.println(String.format(FORMAT_KEY_VALUE, "sentiment", tweet.getSentiment().name()));
-                                writer.println("},");
+                        if (null == idField) {
+                            final String tweetId = idField.stringValue();
+                            if (null != tweetId) {
+                                final Tweet tweet = em.find(Tweet.class, tweetId);
+                                if (null != tweet) {
+                                    writer.println("{");
+                                    writer.println(String.format(FORMAT_KEY_VALUE, "id", tweet.getId()));
+                                    writer.println(String.format(FORMAT_KEY_VALUE, "content", tweet.getContent()));
+                                    writer.println(String.format(FORMAT_KEY_VALUE, "sentiment", tweet.getSentiment().name()));
+                                    writer.println("},");
+                                }
                             }
                         }
                     }
@@ -203,7 +205,7 @@ class TweetCollector implements Collector, LeafCollector {
 
     public BitSet collect() {
         BitSet bitSet = new BitSet();
-        for(BitSet set : bitSets){
+        for (BitSet set : bitSets) {
             bitSet.or(set);
         }
         return bitSet;
