@@ -89,7 +89,7 @@ public final class SentimentStatisticsEndpoint {
                     .add(QUERY_SENTIMENT_POSITIVE, BooleanClause.Occur.MUST);
             for (String word : words) {
                 final Term contentTerm = new Term(CONTENT, word);
-                positiveQueryBuilder.add(new TermsQuery(contentTerm), BooleanClause.Occur.SHOULD);
+                positiveQueryBuilder.add(new TermsQuery(contentTerm), BooleanClause.Occur.MUST);
             }
             final BooleanQuery queryPositive = positiveQueryBuilder.build();
             final int numberOfPositiveTweets = indexSearcher.count(queryPositive);
@@ -99,7 +99,7 @@ public final class SentimentStatisticsEndpoint {
                     .add(QUERY_SENTIMENT_NEGATIVE, BooleanClause.Occur.MUST);
             for (String word : words) {
                 final Term contentTerm = new Term(CONTENT, word);
-                negativeQueryBuilder.add(new TermsQuery(contentTerm), BooleanClause.Occur.SHOULD);
+                negativeQueryBuilder.add(new TermsQuery(contentTerm), BooleanClause.Occur.MUST);
             }
             final BooleanQuery queryNegative = negativeQueryBuilder.build();
             final int numberOfNegativeTweets = indexSearcher.count(queryNegative);
@@ -116,7 +116,7 @@ public final class SentimentStatisticsEndpoint {
 
     @GET
     @Path("downloadByPhrase")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response downloadByPhrase(@QueryParam(PHRASE) String phrase) throws IOException {
         final SearcherManager searchManager = (SearcherManager) servletContext.getAttribute(SearcherManager.class.getName());
         final IndexSearcher indexSearcher = searchManager.acquire();
@@ -135,6 +135,7 @@ public final class SentimentStatisticsEndpoint {
                 EntityManager em = null;
                 try {
                     final EntityManagerFactory emf = (EntityManagerFactory) servletContext.getAttribute(EntityManagerFactory.class.getName());
+                    em = emf.createEntityManager();
                     final BitSet bitSet = tweetCollector.collect();
                     final PrintWriter writer = new PrintWriter(output);
                     writer.println("[");
@@ -188,7 +189,7 @@ class TweetCollector implements Collector, LeafCollector {
     @Override
     public LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
         offset = context.docBase;
-        bitSet.and(new BitSet());
+//        bitSet.and(new BitSet());
         return this;
     }
 
