@@ -4,6 +4,7 @@ import com.nlp.task.twitter.analysis.model.entity.Tweet;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexWriter;
@@ -84,7 +85,7 @@ public final class BackgroundIndexingJob implements Runnable {
     private void index(IndexWriter indexWriter, Tweet tweet) throws IOException {
         final Document document = new Document();
 
-        final Field tweetIdField = new StringField(FIELD_TWEET_ID, tweet.getId(), Field.Store.NO);
+        final Field tweetIdField = new StringField(FIELD_TWEET_ID, tweet.getId(), Store.YES);
         document.add(tweetIdField);
 
         final Field contentField = new TextField(FIELD_CONTENT, tweet.getContent(), Field.Store.NO);
