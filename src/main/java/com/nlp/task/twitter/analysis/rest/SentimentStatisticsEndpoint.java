@@ -22,6 +22,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -173,7 +174,8 @@ public final class SentimentStatisticsEndpoint {
 
 
 class TweetCollector implements Collector, LeafCollector {
-    final BitSet bitSet = new BitSet();
+    final ArrayList<BitSet> bitSets = new ArrayList<>();
+    BitSet bitSet;
     int offset = 0;
 
     @Override
@@ -188,8 +190,9 @@ class TweetCollector implements Collector, LeafCollector {
 
     @Override
     public LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
+        bitSet = new BitSet();
         offset = context.docBase;
-//        bitSet.and(new BitSet());
+        bitSets.add(bitSet);
         return this;
     }
 
@@ -199,6 +202,10 @@ class TweetCollector implements Collector, LeafCollector {
     }
 
     public BitSet collect() {
+        BitSet bitSet = new BitSet();
+        for(BitSet set : bitSets){
+            bitSet.or(set);
+        }
         return bitSet;
     }
 }
