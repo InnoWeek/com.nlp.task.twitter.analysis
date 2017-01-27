@@ -11,14 +11,16 @@ import org.apache.lucene.search.*;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.ServletContext;
-import javax.ws.rs.*;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.BitSet;
 import java.util.HashMap;
@@ -82,16 +84,20 @@ public final class SentimentStatisticsEndpoint {
         final SearcherManager searchManager = (SearcherManager) servletContext.getAttribute(SearcherManager.class.getName());
         final IndexSearcher indexSearcher = searchManager.acquire();
         try {
-            final PhraseQuery phraseQuery = new PhraseQuery(CONTENT, phrase.toLowerCase().trim().split(REGEX_WHITESPACE));
-            final BooleanQuery queryPositive = new BooleanQuery.Builder()
-                    .add(QUERY_SENTIMENT_POSITIVE, BooleanClause.Occur.MUST)
-                    .add(phraseQuery, BooleanClause.Occur.MUST)
-                    .build();
+            final String[] words = phrase.toLowerCase().trim().split(REGEX_WHITESPACE);
+            final BooleanQuery.Builder positiveQueryBuilder = new BooleanQuery.Builder()
+                    .add(QUERY_SENTIMENT_POSITIVE, BooleanClause.Occur.MUST);
+            for (String word : words) {
+                final Term contentTerm = new Term(CONTENT, word);
+                positiveQueryBuilder.add(new TermsQuery(contentTerm), BooleanClause.Occur.SHOULD);
+            }
+            final BooleanQuery queryPositive = positiveQueryBuilder.build();
+
             final int numberOfPositiveTweets = indexSearcher.count(queryPositive);
 
             final BooleanQuery queryNegative = new BooleanQuery.Builder()
                     .add(QUERY_SENTIMENT_NEGATIVE, BooleanClause.Occur.MUST)
-                    .add(phraseQuery, BooleanClause.Occur.MUST)
+                    .add(queryPositive, BooleanClause.Occur.MUST)
                     .build();
             final int numberOfNegativeTweets = indexSearcher.count(queryNegative);
 
@@ -129,7 +135,7 @@ public final class SentimentStatisticsEndpoint {
                         final String tweetId = idField.stringValue();
                         if (null != tweetId) {
                             final Tweet tweet = em.find(Tweet.class, tweetId);
-                            if(null != tweet){
+                            if (null != tweet) {
                                 writer.println("{");
                                 writer.println(String.format(FORMAT_KEY_VALUE, "id", tweet.getId()));
                                 writer.println(String.format(FORMAT_KEY_VALUE, "content", tweet.getContent()));

@@ -111,9 +111,9 @@ public final class ManualContentUploadEndpoint {
             errors.add("The tweet id is missing.");
         }
 
-        if (tweet.getSentiment() != null && Tweet.Sentiment.UNKNOWN != tweet.getSentiment()) {
-            errors.add("The incoming tweet cannot contain pre-determined sentiment.");
-        }
+//        if (tweet.getSentiment() != null && Tweet.Sentiment.UNKNOWN != tweet.getSentiment()) {
+//            errors.add("The incoming tweet cannot contain pre-determined sentiment.");
+//        }
 
         if (tweet.getDateOfAnalysis() != null) {
             errors.add("The incoming tweet cannot contain date of analysis");
