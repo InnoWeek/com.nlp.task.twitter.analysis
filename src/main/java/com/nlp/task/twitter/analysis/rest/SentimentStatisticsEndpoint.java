@@ -121,9 +121,15 @@ public final class SentimentStatisticsEndpoint {
         final SearcherManager searchManager = (SearcherManager) servletContext.getAttribute(SearcherManager.class.getName());
         final IndexSearcher indexSearcher = searchManager.acquire();
         try {
+            final String[] words = phrase.toLowerCase().trim().split(REGEX_WHITESPACE);
             final TweetCollector tweetCollector = new TweetCollector();
-            final PhraseQuery phraseQuery = new PhraseQuery(CONTENT, phrase.toLowerCase().trim().split(REGEX_WHITESPACE));
-            indexSearcher.search(phraseQuery, tweetCollector);
+            final BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
+            for (String word : words) {
+                final Term contentTerm = new Term(CONTENT, word);
+                queryBuilder.add(new TermsQuery(contentTerm), BooleanClause.Occur.SHOULD);
+            }
+            final BooleanQuery query = queryBuilder.build();
+            indexSearcher.search(query, tweetCollector);
 
             return Response.ok((StreamingOutput) output -> {
                 EntityManager em = null;
