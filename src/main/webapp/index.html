@@ -175,14 +175,11 @@ $(function() {
 
 $(function() {
 	$("#downloadBtn").on("click", function() {
-		var searchFilter = $("#searchValue").val();
+		/* var searchFilter = $("#searchValue").val();
 		$.get( "http://localhost:8080/ROOT/api/v1/statistics/downloadByPhrase", { phrase: searchFilter})
-		.done(function( data ) {
-
-		});
-
-	})
-});
-
+		.done(function( data ) { */
+		window.open("http://localhost:8080/ROOT/api/v1/statistics/downloadByPhrase?phrase=" + $("#searchValue").val());
+		});	
+	});
 </script>
 </html>

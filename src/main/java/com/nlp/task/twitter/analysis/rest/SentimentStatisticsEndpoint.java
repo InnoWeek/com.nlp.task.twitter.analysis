@@ -143,7 +143,7 @@ public final class SentimentStatisticsEndpoint {
                     for (int i = bitSet.nextSetBit(0); i >= 0; i = bitSet.nextSetBit(i + 1)) {
                         final Document doc = indexSearcher.doc(i);
                         final IndexableField idField = doc.getField("id");
-                        if (null == idField) {
+                        if (null != idField) {
                             final String tweetId = idField.stringValue();
                             if (null != tweetId) {
                                 final Tweet tweet = em.find(Tweet.class, tweetId);
