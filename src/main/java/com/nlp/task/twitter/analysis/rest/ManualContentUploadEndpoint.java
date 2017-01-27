@@ -46,7 +46,7 @@ public final class ManualContentUploadEndpoint {
             if (null == entityManager.find(Tweet.class, tweet.getId())) {
                 entityManager.getTransaction().begin();
                 entityManager.persist(tweet);
-
+                entityManager.getTransaction().commit();
             }
         } finally {
             entityManager.close();

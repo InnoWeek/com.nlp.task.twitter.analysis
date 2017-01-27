@@ -47,7 +47,7 @@ public class BaseDao<T> {
 	 * @param type
 	 *            - type of the DAO
 	 */
-	protected BaseDao(final Class<T> type) {
+	public BaseDao(final Class<T> type) {
 		this.entityManager = EntityManagerProvider.getEntityManager();
 		this.type = type;
 	}

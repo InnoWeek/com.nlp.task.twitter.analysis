@@ -51,9 +51,12 @@ public final class BackgroundIndexingJob implements Runnable {
         logger.log(Level.FINEST, "Background reindexing started.");
         EntityManager entityManager = null;
         final IndexWriterConfig indexWriterConfig = new IndexWriterConfig(new StandardAnalyzer());
+        indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+
         try (IndexWriter indexWriter = new IndexWriter(indexDirectory, indexWriterConfig)) {
             entityManager = emf.createEntityManager();
             index(indexWriter, entityManager);
+            indexWriter.commit();
         } catch (IOException ex) {
             logger.log(Level.SEVERE, "The indexing job failed.", ex);
         } finally {

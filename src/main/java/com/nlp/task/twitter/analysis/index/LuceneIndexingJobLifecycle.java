@@ -1,5 +1,7 @@
 package com.nlp.task.twitter.analysis.index;
 
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
@@ -112,10 +114,26 @@ public final class LuceneIndexingJobLifecycle implements ServletContextListener 
     }
 
     private void initializeTheSearchManager(ServletContextEvent sce) throws IOException {
+        preCreateIndex();
+        createSearchManager(sce);
+        scheduleSearchManagerRefresh();
+    }
+
+    private void preCreateIndex() throws IOException {
+        final IndexWriterConfig indexWriterConfig = new IndexWriterConfig();
+        indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+        try(IndexWriter indexWriter = new IndexWriter(indexDirectory, indexWriterConfig)){
+            indexWriter.flush();
+        }
+    }
+
+    private void createSearchManager(ServletContextEvent sce) throws IOException {
         searcherManager = new SearcherManager(indexDirectory, null);
         final ServletContext servletContext = sce.getServletContext();
         servletContext.setAttribute(SearcherManager.class.getName(), searcherManager);
+    }
 
+    private void scheduleSearchManagerRefresh() {
         scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
                 searcherManager.maybeRefresh();
