@@ -52,7 +52,7 @@
             <div class="row-fluid">
                 <div class="span6 offset3">
                     <div class="row-fluid">
-                        <a href="index.html" id="downloadBtn" class="btn btn-warning span6" style="display:none">Download tweets</a>
+                        <a id="downloadBtn" class="btn btn-warning span6" >Download tweets</a>
                     </div>
                 </div>
             </div>
@@ -165,6 +165,20 @@ $(function() {
 				plotData();
 				$("#canvas").fadeIn("slow");
 			$("#tweetsTbl>tbody").html(newTbody);
+		});
+
+	})
+});
+
+</script>
+<script type="text/javascript">
+
+$(function() {
+	$("#downloadBtn").on("click", function() {
+		var searchFilter = $("#searchValue").val();
+		$.get( "http://localhost:8080/ROOT/api/v1/statistics/downloadByPhrase", { phrase: searchFilter})
+		.done(function( data ) {
+
 		});
 
 	})
